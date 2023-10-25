@@ -1,31 +1,53 @@
 package com.demo.webflux.app.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.net.URI;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.demo.webflux.app.document.ProductDocument;
-import com.demo.webflux.app.repository.ProductRepository;
+import com.demo.webflux.app.service.ProductService;
 
+import lombok.AllArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/products")
+@AllArgsConstructor
 public class ProductController {
 
-	@Autowired
-	private ProductRepository productRepository;
+	private ProductService productService;
+
+	@GetMapping("/load-init-data")
+	public ResponseEntity<Void> loadInitData() {
+		this.productService.loadInitData();
+		return ResponseEntity.status(HttpStatus.CREATED).build();
+	}
 
 	@GetMapping
-	public Flux<ProductDocument> getAll() {
-		return this.productRepository.findAll();
+	public Mono<ResponseEntity<Flux<ProductDocument>>> getAll() {
+		return Mono.just(ResponseEntity.ok(this.productService.getAllProducts()));
 	}
 
 	@GetMapping("/{id}")
-	public Mono<ProductDocument> getById(@PathVariable String id) {
-		return this.productRepository.findById(id);
+	public Mono<ResponseEntity<ProductDocument>> getById(@PathVariable String id) {
+		return this.productService.getProductById(id).map(product -> ResponseEntity.ok(product))
+				.defaultIfEmpty(ResponseEntity.notFound().build());
+	}
+
+	@PostMapping
+	public Mono<ResponseEntity<ProductDocument>> create(@RequestBody ProductDocument product) {
+		return this.productService.createProduct(product).map(savedProduct -> {
+
+			String location = String.format("/api/products/%s", savedProduct.getId());
+			return ResponseEntity.created(URI.create(location)).body(savedProduct);
+		});
 	}
 }
