@@ -2,7 +2,7 @@
 spring:
   data:
     mongodb:
-      authentication-database: admin
+      authentication-database: ${authrole}
       host: localhost
       port: 27017
       database: webflux_db
