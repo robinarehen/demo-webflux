@@ -21,8 +21,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
-	@Value("${config.upload.path}")
-	private String pathFile;
+	@Value("${config.upload.folder}")
+	private String folder;
 
 	private ProductRepository productRepository;
 
@@ -60,13 +60,19 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public Mono<ProductDocument> createProduct(FilePart file, ProductDocument product) {
-		String pathFilename = String.format("%s/%s", this.pathFile, file.filename());
-		File folder = Paths.get(this.pathFile).toFile();
-		if (!folder.isDirectory()) {
-			folder.mkdirs();
-		}
+		String pathFileName = this.getPathFileName(file.filename());
 		product.setCreateAt(LocalDateTime.now());
-		return file.transferTo(Path.of(pathFilename)).then(this.productRepository.save(product));
+		return file.transferTo(Path.of(pathFileName)).then(this.productRepository.save(product));
+	}
+
+	private String getPathFileName(String fileName) {
+		String userDirectory = System.getProperty("user.dir");
+		String pathFile = String.format("%s/%s", userDirectory, this.folder);
+		File pathFolder = Paths.get(pathFile).toFile();
+		if (!pathFolder.isDirectory()) {
+			pathFolder.mkdirs();
+		}
+		return String.format("%s/%s", pathFile, fileName);
 	}
 
 }
