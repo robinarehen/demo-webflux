@@ -55,6 +55,7 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public Mono<ProductDocument> createProduct(ProductDocument product) {
+		product.setCreateAt(LocalDateTime.now());
 		return this.productRepository.save(product);
 	}
 
