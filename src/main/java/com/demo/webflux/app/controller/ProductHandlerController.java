@@ -2,7 +2,11 @@ package com.demo.webflux.app.controller;
 
 import java.net.URI;
 
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.FormFieldPart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -34,8 +38,35 @@ public class ProductHandlerController {
 		return monoProduct.flatMap(product -> {
 			return this.productService.createProduct(product);
 		}).flatMap(product -> {
-			String location = String.format("/api/v2/products/%s", product.getId());
-			return ServerResponse.created(URI.create(location)).body(BodyInserters.fromValue(product));
-		}).switchIfEmpty(ServerResponse.notFound().build());
+			return ServerResponse.created(this.getLocation(product.getId())).body(product, ProductDocument.class);
+		});
+	}
+
+	public Mono<ServerResponse> createWithImage(ServerRequest request) {
+
+		Mono<FilePart> monoFile = request.multipartData().map(multipart -> multipart.get("file")).cast(FilePart.class);
+
+		Mono<ProductDocument> monoProduct = request.multipartData().map(multipart -> {
+			String name = this.getField(multipart, "name");
+			String value = this.getField(multipart, "value");
+			return new ProductDocument(name, Double.parseDouble(value));
+		});
+
+		return monoFile.zipWith(monoProduct, (file, product) -> {
+			return this.productService.createProduct(file, product);
+		}).flatMap(savedProduct -> {
+			return savedProduct.flatMap(product -> {
+				return ServerResponse.created(this.getLocation(product.getId())).body(BodyInserters.fromValue(product));
+			});
+		});
+	}
+
+	private URI getLocation(String id) {
+		String location = String.format("/api/v2/products/%s", id);
+		return URI.create(location);
+	}
+
+	private String getField(MultiValueMap<String, Part> multipart, String fileName) {
+		return ((FormFieldPart) multipart.get(fileName)).value();
 	}
 }

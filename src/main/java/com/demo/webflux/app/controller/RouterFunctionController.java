@@ -27,8 +27,10 @@ public class RouterFunctionController {
 	@Bean
 	RouterFunction<ServerResponse> routesProduct(ProductHandlerController productHandler) {
 		String getById = String.format("%s/{id}", REQUEST_MAPPING);
+		String withImage = String.format("%s/with-image", REQUEST_MAPPING);
 		return route(GET(REQUEST_MAPPING), productHandler::getAll)
 				.andRoute(GET(getById), productHandler::getById)
-				.andRoute(POST(REQUEST_MAPPING), productHandler::create);
+				.andRoute(POST(REQUEST_MAPPING), productHandler::create)
+				.andRoute(POST(withImage), productHandler::create);
 	}
 }

@@ -1,5 +1,7 @@
-
 spring:
+  application:
+    name: demo-webflux
+  # database connection, The environment variables must be created
   data:
     mongodb:
       authentication-database: ${authrole}
@@ -8,3 +10,28 @@ spring:
       database: webflux_db
       username: ${username}
       password: ${password}
+  # admin server connection
+  boot:
+    admin:      
+      client:
+        url:
+        - http://localhost:8081
+
+# actuator config to show in admin server
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# logging config
+---
+logging:
+  file:
+    name: demo-webflux.log
+    max-size: 20MB
+    max-history: 20 
+  

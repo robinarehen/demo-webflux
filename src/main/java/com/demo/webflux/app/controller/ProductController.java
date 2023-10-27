@@ -47,16 +47,20 @@ public class ProductController {
 	@PostMapping
 	public Mono<ResponseEntity<ProductDocument>> create(@RequestBody ProductDocument product) {
 		return this.productService.createProduct(product).map(savedProduct -> {
-			String location = String.format("/api/products/%s", savedProduct.getId());
-			return ResponseEntity.created(URI.create(location)).body(savedProduct);
+			return ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct);
 		});
 	}
-	
+
 	@PostMapping("/with-image")
-	public Mono<ResponseEntity<ProductDocument>> createWithImage(@RequestPart FilePart file ,ProductDocument product) {
+	public Mono<ResponseEntity<ProductDocument>> createWithImage(@RequestPart FilePart file, ProductDocument product) {
 		return this.productService.createProduct(file, product).map(savedProduct -> {
-			String location = String.format("/api/products/%s", savedProduct.getId());
-			return ResponseEntity.created(URI.create(location)).body(savedProduct);
+			return ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct);
 		});
 	}
+
+	private URI getLocation(String id) {
+		String location = String.format("/api/products/%s", id);
+		return URI.create(location);
+	}
+
 }
