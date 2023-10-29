@@ -40,22 +40,22 @@ public class ProductController {
 
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<ProductDocument>> getById(@PathVariable String id) {
-		return this.productService.getProductById(id).map(product -> ResponseEntity.ok(product))
+		return this.productService.getProductById(id).map(ResponseEntity::ok)
 				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 
 	@PostMapping
 	public Mono<ResponseEntity<ProductDocument>> create(@RequestBody ProductDocument product) {
-		return this.productService.createProduct(product).map(savedProduct -> {
-			return ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct);
-		});
+		return this.productService.createProduct(product).map(savedProduct -> 
+			ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct)
+		);
 	}
 
 	@PostMapping("/with-image")
 	public Mono<ResponseEntity<ProductDocument>> createWithImage(@RequestPart FilePart file, ProductDocument product) {
-		return this.productService.createProduct(file, product).map(savedProduct -> {
-			return ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct);
-		});
+		return this.productService.createProduct(file, product).map(savedProduct -> 
+			ResponseEntity.created(this.getLocation(product.getId())).body(savedProduct)
+		);
 	}
 
 	private URI getLocation(String id) {

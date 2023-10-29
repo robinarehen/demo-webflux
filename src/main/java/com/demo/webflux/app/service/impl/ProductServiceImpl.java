@@ -40,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
 				new ProductDocument("Celular", 350.00), new ProductDocument("Portatil", 450.00)).flatMap(product -> {
 					product.setCreateAt(LocalDateTime.now());
 					return this.productRepository.save(product);
-				}).subscribe(product -> log.info("insert: {}", product));
+				}).subscribe(product -> log.info("inserted: {}", product));
 	}
 
 	@Override

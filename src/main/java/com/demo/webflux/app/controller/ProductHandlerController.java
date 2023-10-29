@@ -23,7 +23,7 @@ public class ProductHandlerController {
 
 	private ProductService productService;
 
-	public Mono<ServerResponse> getAll(ServerRequest request) {
+	public Mono<ServerResponse> getAll() {
 		return ServerResponse.ok().body(this.productService.getAllProducts(), ProductDocument.class);
 	}
 
@@ -35,11 +35,8 @@ public class ProductHandlerController {
 
 	public Mono<ServerResponse> create(ServerRequest request) {
 		Mono<ProductDocument> monoProduct = request.bodyToMono(ProductDocument.class);
-		return monoProduct.flatMap(product -> {
-			return this.productService.createProduct(product);
-		}).flatMap(product -> {
-			return ServerResponse.created(this.getLocation(product.getId())).body(product, ProductDocument.class);
-		});
+		return monoProduct.flatMap(this.productService::createProduct)
+				.flatMap(product -> ServerResponse.created(this.getLocation(product.getId())).bodyValue(product));
 	}
 
 	public Mono<ServerResponse> createWithImage(ServerRequest request) {
@@ -52,13 +49,9 @@ public class ProductHandlerController {
 			return new ProductDocument(name, Double.parseDouble(value));
 		});
 
-		return monoFile.zipWith(monoProduct, (file, product) -> {
-			return this.productService.createProduct(file, product);
-		}).flatMap(savedProduct -> {
-			return savedProduct.flatMap(product -> {
-				return ServerResponse.created(this.getLocation(product.getId())).body(BodyInserters.fromValue(product));
-			});
-		});
+		return monoFile.zipWith(monoProduct, (file, product) -> this.productService.createProduct(file, product))
+				.flatMap(savedProduct -> savedProduct.flatMap(
+						product -> ServerResponse.created(this.getLocation(product.getId())).bodyValue(product)));
 	}
 
 	private URI getLocation(String id) {
